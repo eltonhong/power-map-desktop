@@ -29,6 +29,7 @@
           <div class="head-right">
             <RoleBadge :role="node.role_type" />
             <span class="collapse-icon">{{ collapsedIds.has(node.id) ? '▸' : '▾' }}</span>
+            <button class="del-btn" @click.stop="delNode(node.id)" title="删除此人物">×</button>
           </div>
         </div>
 
@@ -147,6 +148,12 @@ function attitudeClass(v) {
 function selectNode(id) {
   selectedId.value = id
   emit('selectNode', id)
+}
+
+function delNode(id) {
+  store.current.nodes = store.current.nodes.filter(n => n.id !== id)
+  store.current.connections = store.current.connections.filter(c => c.from !== id && c.to !== id)
+  if (selectedId.value === id) selectedId.value = null
 }
 
 function toggleCollapse(id) {
@@ -273,6 +280,12 @@ defineExpose({ selectedId })
 .head-position { font-size: var(--fs-caption); color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .head-right { display: flex; align-items: center; gap: var(--space-sm); flex-shrink: 0; }
 .collapse-icon { font-size: var(--fs-caption); color: var(--text-tertiary); width: 16px; text-align: center; }
+.del-btn {
+  background: none; border: none; color: var(--text-tertiary); cursor: pointer;
+  font-size: 16px; padding: 2px 6px; border-radius: var(--radius-sm); line-height: 1;
+  transition: all var(--transition-fast);
+}
+.del-btn:hover { color: var(--risk-red); background: rgba(255,77,79,0.08); }
 
 /* Card Body */
 .card-body { padding: 0 var(--space-lg) var(--space-lg); }

@@ -20,6 +20,7 @@ import { ROLE_COLORS, ROLE_LABELS } from '@/engine/role-classifier'
 
 const props = defineProps({ highlightId: { type: Number, default: null } })
 
+const emit = defineEmits(['nodeClick'])
 const store = useProjectStore()
 const { initChart, setOption, resize, dispose, getChart } = useECharts()
 const chartDom = ref(null)
@@ -28,6 +29,16 @@ onMounted(() => {
   initChart(chartDom.value)
   renderChart()
   window.addEventListener('resize', resize)
+  // Bind chart click event
+  const chart = getChart()
+  if (chart) {
+    chart.on('click', (params) => {
+      if (params.componentType === 'series' && params.seriesType === 'scatter') {
+        const node = store.current?.nodes[params.dataIndex]
+        if (node) emit('nodeClick', node.id)
+      }
+    })
+  }
 })
 onUnmounted(() => {
   window.removeEventListener('resize', resize)

@@ -3,83 +3,97 @@
     <div v-if="visible" class="drawer-overlay" @click.self="close">
       <transition name="drawer-pnl">
         <div v-if="visible" class="drawer-panel">
+          <!-- Header -->
           <div class="drawer-header">
-            <h3>{{ selectedNode?.name || '未命名' }}</h3>
-            <RoleBadge :role="selectedNode?.role_type" />
+            <div class="header-info">
+              <span class="header-role-dot" :style="{ background: roleDotColor }"></span>
+              <h3 class="header-name">{{ selectedNode?.name || '未命名' }}</h3>
+            </div>
+            <div class="header-meta">
+              <RoleBadge :role="selectedNode?.role_type" />
+              <span class="header-position" v-if="selectedNode?.position">{{ selectedNode?.position }}</span>
+            </div>
             <button class="close-btn" @click="close">×</button>
           </div>
 
-          <div class="drawer-scores">
-            <div class="score-item">
+          <!-- Score bars -->
+          <div class="score-row">
+            <div class="score-bar">
               <span class="score-label">权力</span>
-              <span class="score-value power">{{ selectedNode?.power }} / 10</span>
+              <div class="score-track"><div class="score-fill power" :style="{ width: (selectedNode?.power||0)*10 + '%' }"></div></div>
+              <span class="score-num">{{ selectedNode?.power }}<small>/10</small></span>
             </div>
-            <div class="score-item">
+            <div class="score-bar">
               <span class="score-label">态度</span>
-              <span class="score-value" :class="attitudeClass">
-                {{ attitudeDisplay }}
-              </span>
+              <div class="score-track"><div class="score-fill" :class="attitudeFillClass" :style="{ width: ((selectedNode?.attitude||0)+5)*10 + '%' }"></div></div>
+              <span class="score-num" :class="attitudeTextClass">{{ attitudeSign }}{{ Math.abs(selectedNode?.attitude||0) }}<small>/±5</small></span>
             </div>
           </div>
 
           <div v-if="strategy" class="drawer-body">
-            <div class="drawer-section">
-              <h4 class="section-toggle" @click="toggle('def')">
-                角色定义 {{ openSections.def ? '▾' : '▸' }}
-              </h4>
-              <p v-if="openSections.def" class="section-content">{{ strategy.definition }}</p>
-            </div>
+            <!-- Definition -->
+            <section class="drawer-block">
+              <h4 class="block-title">角色定义</h4>
+              <p class="block-text">{{ strategy.definition }}</p>
+            </section>
 
-            <div class="drawer-section">
-              <h4 class="section-toggle" @click="toggle('signals')">
-                识别信号 {{ openSections.signals ? '▾' : '▸' }}
-              </h4>
-              <ul v-if="openSections.signals" class="section-content">
-                <li v-for="s in strategy.signals" :key="s">{{ s }}</li>
+            <div class="block-divider"></div>
+
+            <!-- Signals -->
+            <section class="drawer-block">
+              <h4 class="block-title">识别信号</h4>
+              <ul class="signal-list">
+                <li v-for="s in strategy.signals" :key="s" class="signal-item">
+                  <span class="signal-dot"></span>
+                  <span>{{ s }}</span>
+                </li>
               </ul>
-            </div>
+            </section>
 
-            <div class="drawer-section">
-              <h4 class="section-toggle" @click="toggle('strategies')">
-                核心策略 {{ openSections.strategies ? '▾' : '▸' }}
-              </h4>
-              <div v-if="openSections.strategies" class="section-content">
-                <div v-for="(s, i) in strategy.strategies" :key="i" class="action-row">
-                  <span class="action-num">{{ i + 1 }}</span>
-                  <p>{{ s }}</p>
-                  <button class="mini-copy" @click="copy(s)">📋</button>
-                </div>
+            <div class="block-divider"></div>
+
+            <!-- Core Strategies - SMART format -->
+            <section class="drawer-block">
+              <h4 class="block-title">核心策略 · SMART 框架</h4>
+              <div v-for="(s, i) in strategy.strategies" :key="i" class="smart-card">
+                <div class="smart-label">策略 {{ i + 1 }}</div>
+                <div class="smart-content" v-html="renderSmartText(s)"></div>
+                <button class="smart-copy" @click="copy(s)">一键复制</button>
               </div>
-            </div>
+            </section>
 
-            <div class="drawer-section">
-              <h4 class="section-toggle" @click="toggle('actions')">
-                本周落地动作 {{ openSections.actions ? '▾' : '▸' }}
-              </h4>
-              <div v-if="openSections.actions" class="section-content">
-                <div v-for="(a, i) in strategy.weeklyActions" :key="i" class="action-row">
-                  <span class="action-num">{{ i + 1 }}</span>
-                  <p>{{ a }}</p>
-                  <button class="mini-copy" @click="copy(a)">📋</button>
-                </div>
+            <div class="block-divider"></div>
+
+            <!-- Weekly Actions -->
+            <section class="drawer-block">
+              <h4 class="block-title">本周落地动作</h4>
+              <div v-for="(a, i) in strategy.weeklyActions" :key="i" class="action-card">
+                <div class="action-num">{{ i + 1 }}</div>
+                <p class="action-text">{{ a }}</p>
+                <button class="action-copy" @click="copy(a)">复制</button>
               </div>
-            </div>
+            </section>
 
-            <div class="drawer-section" v-if="strategy.crossCulture">
-              <h4 class="section-toggle" @click="toggle('culture')">
-                跨文化提醒 {{ openSections.culture ? '▾' : '▸' }}
-              </h4>
-              <p v-if="openSections.culture" class="section-content">{{ strategy.crossCulture }}</p>
-            </div>
+            <div class="block-divider" v-if="strategy.crossCulture"></div>
 
-            <div class="drawer-section">
-              <h4 class="section-toggle" @click="toggle('redLines')">
-                避坑红线 {{ openSections.redLines ? '▾' : '▸' }}
-              </h4>
-              <ul v-if="openSections.redLines" class="section-content red-lines">
-                <li v-for="r in strategy.redLines" :key="r">{{ r }}</li>
+            <!-- Cross-Culture -->
+            <section class="drawer-block" v-if="strategy.crossCulture">
+              <h4 class="block-title">跨文化提醒</h4>
+              <div class="culture-text" v-html="renderedCulture"></div>
+            </section>
+
+            <div class="block-divider"></div>
+
+            <!-- Red Lines -->
+            <section class="drawer-block red">
+              <h4 class="block-title red-title">避坑红线</h4>
+              <ul class="redline-list">
+                <li v-for="r in strategy.redLines" :key="r" class="redline-item">
+                  <span class="redline-icon">⚠</span>
+                  <span>{{ r }}</span>
+                </li>
               </ul>
-            </div>
+            </section>
           </div>
         </div>
       </transition>
@@ -88,56 +102,60 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useProjectStore } from '@/stores/project'
 import { getStrategy } from '@/engine/strategy-matcher'
+import { ROLE_COLORS } from '@/engine/role-classifier'
 import RoleBadge from '@/components/common/RoleBadge.vue'
 
 const store = useProjectStore()
 const visible = ref(false)
 const selectedId = ref(null)
-const openSections = reactive({
-  def: true,
-  signals: false,
-  strategies: true,
-  actions: true,
-  culture: false,
-  redLines: false
-})
 
 const selectedNode = computed(() =>
   store.current?.nodes.find(n => n.id === selectedId.value)
 )
-
 const strategy = computed(() => {
   if (!selectedNode.value || !store.current) return null
   return getStrategy(selectedNode.value.role_type, store.current.scene)
 })
 
-const attitudeDisplay = computed(() => {
-  const v = selectedNode.value?.attitude
-  if (v === undefined || v === null) return '--'
-  return v > 0 ? `+${v} / ±5` : `${v} / ±5`
-})
-
-const attitudeClass = computed(() => {
+const roleDotColor = computed(() => ROLE_COLORS[selectedNode.value?.role_type] || 'var(--bystander)')
+const attitudeSign = computed(() => (selectedNode.value?.attitude || 0) > 0 ? '+' : '')
+const attitudeFillClass = computed(() => {
   const v = selectedNode.value?.attitude || 0
   return v >= 3 ? 'positive' : v <= -3 ? 'negative' : 'neutral'
 })
+const attitudeTextClass = computed(() => {
+  const v = selectedNode.value?.attitude || 0
+  return v >= 3 ? 'text-positive' : v <= -3 ? 'text-negative' : 'text-neutral'
+})
 
-function toggle(key) {
-  openSections[key] = !openSections[key]
+const renderedCulture = computed(() => {
+  if (!strategy.value?.crossCulture) return ''
+  return strategy.value.crossCulture
+    .replace(/\n\n/g, '</p><p class="culture-p">')
+    .replace(/\n- /g, '<br>• ')
+    .replace(/^/, '<p class="culture-p">')
+    .replace(/$/, '</p>')
+})
+
+function renderSmartText(text) {
+  return text
+    .replace(/【(.+?)】/g, '<strong class="smart-tag">$1</strong>')
+    .replace(/\n\n/g, '</p><p class="smart-p">')
+    .replace(/\n(\d)\./g, '<br><span class="smart-num">$1.</span>')
+    .replace(/\n·/g, '<br><span class="smart-bullet">·</span>')
+    .replace(/\n-/g, '<br><span class="smart-dash">—</span>')
+    .replace(/^/, '<p class="smart-p">')
+    .replace(/$/, '</p>')
 }
 
 function open(nodeId) {
   selectedId.value = nodeId
   visible.value = true
 }
-
-function close() {
-  visible.value = false
-}
-
+function close() { visible.value = false }
 function copy(text) {
   navigator.clipboard.writeText(text)
   window.$toast?.('已复制', 'success')
@@ -147,129 +165,131 @@ defineExpose({ open, close })
 </script>
 
 <style scoped>
+/* ---- Overlay ---- */
 .drawer-overlay {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 100;
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.55); z-index: 100;
 }
-.drawer-panel {
-  position: absolute;
-  right: 0; top: 0; bottom: 0;
-  width: 380px;
-  background: var(--bg-glass);
-  backdrop-filter: blur(var(--blur));
-  border-left: 1px solid var(--border);
-  padding: 20px;
-  overflow-y: auto;
-}
-.drawer-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-.drawer-header h3 {
-  font-size: 16px;
-  flex: 1;
-}
-.close-btn {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 22px;
-  cursor: pointer;
-  padding: 0 4px;
-  line-height: 1;
-}
-.close-btn:hover { color: var(--text-primary); }
-.drawer-scores {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--border);
-}
-.score-item { display: flex; flex-direction: column; gap: 4px; }
-.score-label { font-size: 11px; color: var(--text-secondary); }
-.score-value {
-  font-family: var(--font-mono);
-  font-size: 15px;
-  font-weight: 600;
-}
-.score-value.power { color: var(--gold); }
-.score-value.positive { color: var(--champion); }
-.score-value.negative { color: var(--risk-red); }
-.score-value.neutral { color: var(--text-secondary); }
 
-.drawer-body { display: flex; flex-direction: column; gap: 4px; }
-.drawer-section {
-  border-bottom: 1px solid var(--border);
-  padding: 8px 0;
+/* ---- Panel ---- */
+.drawer-panel {
+  position: absolute; right: 0; top: 0; bottom: 0; width: 440px;
+  background: var(--bg-glass); backdrop-filter: blur(20px);
+  border-left: 1px solid var(--border-strong); box-shadow: var(--shadow-lg);
+  display: flex; flex-direction: column; overflow: hidden;
 }
-.section-toggle {
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 6px 0;
-  user-select: none;
-  color: var(--text-primary);
-  transition: color 0.15s;
+
+/* ---- Header ---- */
+.drawer-header {
+  padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
-.section-toggle:hover { color: var(--gold); }
-.section-content {
-  padding: 6px 0 6px 0;
-  font-size: 13px;
-  line-height: 1.7;
-  color: var(--text-secondary);
+.header-info { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.header-role-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.header-name { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+.header-meta { display: flex; align-items: center; gap: 10px; }
+.header-position { font-size: 13px; color: var(--text-secondary); }
+.close-btn {
+  position: absolute; top: 16px; right: 20px;
+  background: none; border: none; color: var(--text-tertiary);
+  font-size: 24px; cursor: pointer; width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-sm); transition: all var(--transition-fast);
 }
-.section-content li {
-  margin-bottom: 4px;
+.close-btn:hover { color: var(--text-primary); background: var(--overlay-hover); }
+
+/* ---- Scores ---- */
+.score-row { display: flex; gap: 16px; padding: 16px 24px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.score-bar { flex: 1; display: flex; align-items: center; gap: 10px; }
+.score-label { font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 1px; width: 28px; }
+.score-track { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.score-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+.score-fill.power { background: var(--gold); }
+.score-fill.positive { background: var(--champion); }
+.score-fill.negative { background: var(--risk-red); }
+.score-fill.neutral { background: var(--text-tertiary); }
+.score-num { font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: var(--gold); min-width: 50px; text-align: right; }
+.score-num small { font-size: 11px; font-weight: 400; color: var(--text-tertiary); }
+.score-num.text-positive { color: var(--champion); }
+.score-num.text-negative { color: var(--risk-red); }
+.score-num.text-neutral { color: var(--text-tertiary); }
+
+/* ---- Body ---- */
+.drawer-body { flex: 1; overflow-y: auto; padding: 0 24px 32px; }
+
+/* ---- Blocks ---- */
+.drawer-block { padding: 20px 0; }
+.block-divider { height: 1px; background: var(--border); margin: 0; }
+.block-title {
+  font-size: 13px; font-weight: 700; color: var(--gold); text-transform: uppercase;
+  letter-spacing: 1.5px; margin-bottom: 14px;
 }
-.action-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 4px 0;
+.block-text { font-size: 14px; line-height: 1.85; color: var(--text-primary); }
+
+/* ---- Signals ---- */
+.signal-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.signal-item { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; line-height: 1.7; color: var(--text-secondary); }
+.signal-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); margin-top: 8px; flex-shrink: 0; }
+
+/* ---- SMART Cards ---- */
+.smart-card {
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px; margin-bottom: 14px;
+}
+.smart-label {
+  font-size: 11px; font-weight: 700; color: var(--gold); text-transform: uppercase;
+  letter-spacing: 1px; margin-bottom: 10px;
+}
+.smart-content { font-size: 13px; line-height: 1.9; color: var(--text-secondary); }
+.smart-content :deep(.smart-p) { margin-bottom: 10px; }
+.smart-content :deep(.smart-tag) {
+  display: block; font-size: 13px; font-weight: 700; color: var(--text-primary);
+  margin: 12px 0 6px; padding-left: 8px; border-left: 3px solid var(--gold);
+}
+.smart-content :deep(.smart-num) { font-weight: 600; color: var(--gold); }
+.smart-content :deep(.smart-bullet) { color: var(--gold); margin-right: 4px; }
+.smart-content :deep(.smart-dash) { color: var(--text-tertiary); margin-right: 4px; }
+.smart-copy {
+  margin-top: 12px; padding: 6px 16px; border: 1px solid var(--border);
+  border-radius: var(--radius-md); background: transparent; color: var(--gold);
+  font-size: 12px; cursor: pointer; transition: all var(--transition-fast);
+}
+.smart-copy:hover { background: rgba(226,176,74,0.08); border-color: var(--gold); }
+
+/* ---- Action Cards ---- */
+.action-card {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 14px; margin-bottom: 8px;
 }
 .action-num {
-  background: var(--gold);
-  color: #000;
-  min-width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: 700;
-  flex-shrink: 0;
-  margin-top: 2px;
+  width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+  background: var(--gold); color: #000; font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; margin-top: 2px;
 }
-.action-row p { flex: 1; font-size: 13px; line-height: 1.6; }
-.mini-copy {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 13px;
-  opacity: 0.4;
-  padding: 2px;
-  flex-shrink: 0;
-  transition: opacity 0.15s;
+.action-text { flex: 1; font-size: 13px; line-height: 1.8; color: var(--text-secondary); }
+.action-copy {
+  padding: 4px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: transparent; color: var(--text-tertiary); font-size: 11px; cursor: pointer;
+  flex-shrink: 0; transition: all var(--transition-fast);
 }
-.mini-copy:hover { opacity: 1; }
+.action-copy:hover { color: var(--gold); border-color: var(--gold); }
 
-.red-lines { color: var(--risk-red); }
+/* ---- Culture ---- */
+.culture-text { font-size: 13px; line-height: 1.9; color: var(--text-secondary); }
+.culture-text :deep(.culture-p) { margin-bottom: 10px; }
 
+/* ---- Redlines ---- */
+.drawer-block.red { padding-bottom: 24px; }
+.red-title { color: var(--risk-red) !important; }
+.redline-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.redline-item { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; line-height: 1.7; color: var(--risk-red); }
+.redline-icon { flex-shrink: 0; margin-top: 1px; }
+
+/* ---- Transitions ---- */
 .drawer-bg-enter-active { transition: opacity 0.3s ease; }
-.drawer-bg-leave-active { transition: opacity 0.2s ease; }
-.drawer-bg-enter-from,
-.drawer-bg-leave-to { opacity: 0; }
-
-.drawer-pnl-enter-active {
-  animation: slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.drawer-pnl-leave-active {
-  animation: slideInRight 0.25s ease reverse;
-}
+.drawer-bg-leave-active { transition: opacity 0.25s ease; }
+.drawer-bg-enter-from, .drawer-bg-leave-to { opacity: 0; }
+.drawer-pnl-enter-active { animation: slideInRight 0.35s cubic-bezier(0.16,1,0.3,1); }
+.drawer-pnl-leave-active { animation: slideInRight 0.25s ease reverse; }
 </style>

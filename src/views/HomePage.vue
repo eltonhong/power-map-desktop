@@ -44,6 +44,7 @@
               <span class="proj-meta">{{ SCENE_CONFIG[p.scene]?.label }} · {{ fmtDate(p.createdAt) }}</span>
             </div>
             <div class="proj-right" @click.stop>
+              <button class="proj-btn" @click="handleRename(p)">改名</button>
               <button class="proj-btn" @click="handleCopy(p.id)">复制</button>
               <button class="proj-btn danger" @click="handleDelete(p.id)">删除</button>
             </div>
@@ -88,6 +89,21 @@ async function handleCreate(scene) {
 }
 
 function handleOpen(id) { router.push(`/editor/${id}`) }
+
+async function handleRename(p) {
+  const newName = prompt('新项目名：', p.name)
+  if (!newName || !newName.trim()) return
+  p.name = newName.trim()
+  localStorage.setItem('pm-projects', JSON.stringify(store.projects))
+  // Also update the project file
+  try {
+    await store.loadProject(p.id)
+    if (store.current) {
+      store.current.name = p.name
+      await store.saveProject()
+    }
+  } catch (e) { /* ignore */ }
+}
 
 async function handleDelete(id) {
   try { if (window.electronAPI) await window.electronAPI.deleteProject(id) } catch (e) {}

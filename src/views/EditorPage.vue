@@ -25,7 +25,7 @@
         @hoverNode="onHoverNode"
       />
       <div class="panel-center">
-        <ChartPanel ref="chartRef" :highlightId="hoveredNodeId" />
+        <ChartPanel ref="chartRef" :highlightId="hoveredNodeId" @nodeClick="onSelectNode" />
         <StrategyBar />
       </div>
     </div>
