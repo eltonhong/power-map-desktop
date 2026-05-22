@@ -63,44 +63,84 @@ function renderChart() {
   }
 
   series.push({
-    type: 'scatter', symbolSize: 22, animationDuration: 500, animationEasing: 'cubicInOut',
+    type: 'scatter', symbolSize: 26, animationDuration: 500, animationEasing: 'cubicInOut',
     data: nodes.map(n => ({
       value: [n.attitude, n.power], name: n.name,
+      position: n.position || '', role_type: n.role_type || '',
+      relations: n.relations || n.info_source || n.agent_role || n.buying_role || '',
+      weekly_action: n.weekly_action || n.monthly_action || '',
       itemStyle: {
         color: ROLE_COLORS[n.role_type] || '#6b7280',
-        shadowBlur: props.highlightId === n.id ? 20 : 4,
-        shadowColor: props.highlightId === n.id ? ROLE_COLORS[n.role_type] : 'rgba(0,0,0,0.3)'
+        borderColor: '#fff', borderWidth: 2,
+        shadowBlur: props.highlightId === n.id ? 24 : 6,
+        shadowColor: props.highlightId === n.id ? ROLE_COLORS[n.role_type] : 'rgba(0,0,0,0.4)'
       },
-      symbolSize: props.highlightId === n.id ? 32 : 22
+      symbolSize: props.highlightId === n.id ? 36 : 26
     })),
     label: {
-      show: true, position: 'top', formatter: p => p.name,
-      color: '#e6edf3', fontSize: 11, fontFamily: 'PingFang SC, Microsoft YaHei, sans-serif', distance: 10
+      show: true, position: 'right', formatter: p => p.name, distance: 14,
+      color: '#e6edf3', fontSize: 12, fontWeight: 'bold',
+      fontFamily: 'PingFang SC, Microsoft YaHei, sans-serif',
+      textShadowColor: 'rgba(0,0,0,0.7)', textShadowBlur: 4
     },
-    emphasis: { scale: 1.4, itemStyle: { shadowBlur: 20, shadowColor: 'rgba(226,176,74,0.6)' } }
+    emphasis: {
+      scale: 1.5,
+      itemStyle: { shadowBlur: 30, shadowColor: 'rgba(226,176,74,0.8)', borderWidth: 3, borderColor: '#fff' }
+    }
   })
-
-  const axisColor = 'rgba(255,255,255,0.10)'
-  const labelColor = '#8b949e'
 
   setOption({
     animation: true,
-    grid: { left: 50, right: 30, top: 30, bottom: 30 },
+    backgroundColor: 'transparent',
+    grid: { left: 60, right: 40, top: 20, bottom: 30 },
+    // Quadrant background shading
+    graphic: [
+      { type: 'rect', left: '50%', top: 0, right: 0, bottom: '50%',
+        style: { fill: 'rgba(34,197,94,0.03)' }, z: 0 },
+      { type: 'rect', left: 0, top: 0, right: '50%', bottom: '50%',
+        style: { fill: 'rgba(255,77,79,0.03)' }, z: 0 },
+      { type: 'rect', left: '50%', top: '50%', right: 0, bottom: 0,
+        style: { fill: 'rgba(34,197,94,0.02)' }, z: 0 },
+      { type: 'rect', left: 0, top: '50%', right: '50%', bottom: 0,
+        style: { fill: 'rgba(255,77,79,0.02)' }, z: 0 }
+    ],
     xAxis: {
       min: -5, max: 5, interval: 1,
-      axisLine: { lineStyle: { color: axisColor } },
-      axisLabel: { color: labelColor, fontSize: 10, fontFamily: 'JetBrains Mono, Consolas, monospace' },
-      splitLine: { lineStyle: { color: 'rgba(255,255,255,0.04)' } },
-      name: '态度 →',
-      nameTextStyle: { color: labelColor, fontSize: 11, padding: [0, 0, 8, 0] }
+      axisLine: { lineStyle: { color: 'rgba(255,255,255,0.35)', width: 2, type: 'solid' } },
+      axisTick: { show: true, lineStyle: { color: 'rgba(255,255,255,0.25)', width: 1 } },
+      axisLabel: { color: '#c0c6ce', fontSize: 12, fontWeight: 'bold', fontFamily: 'JetBrains Mono, Consolas, monospace' },
+      splitLine: { lineStyle: { color: 'rgba(255,255,255,0.08)', type: 'dashed', width: 1 } },
+      name: '← 敌对                              态度                              友好 →',
+      nameLocation: 'center',
+      nameTextStyle: { color: '#c0c6ce', fontSize: 13, fontWeight: 'bold', padding: [16, 0, 0, 0] }
     },
     yAxis: {
       min: 1, max: 10, interval: 1,
-      axisLine: { lineStyle: { color: axisColor } },
-      axisLabel: { color: labelColor, fontSize: 10, fontFamily: 'JetBrains Mono, Consolas, monospace' },
-      splitLine: { lineStyle: { color: 'rgba(255,255,255,0.04)' } },
-      name: '权力 ↑',
-      nameTextStyle: { color: labelColor, fontSize: 11, padding: [0, 0, 0, 0] }
+      axisLine: { lineStyle: { color: 'rgba(255,255,255,0.35)', width: 2, type: 'solid' } },
+      axisTick: { show: true, lineStyle: { color: 'rgba(255,255,255,0.25)', width: 1 } },
+      axisLabel: { color: '#c0c6ce', fontSize: 12, fontWeight: 'bold', fontFamily: 'JetBrains Mono, Consolas, monospace' },
+      splitLine: { lineStyle: { color: 'rgba(255,255,255,0.08)', type: 'dashed', width: 1 } },
+      name: '权\n力\n↑',
+      nameLocation: 'center',
+      nameTextStyle: { color: '#c0c6ce', fontSize: 13, fontWeight: 'bold', padding: [0, 0, 0, 0] }
+    },
+    tooltip: {
+      show: true,
+      trigger: 'item',
+      backgroundColor: 'rgba(19,24,32,0.95)',
+      borderColor: 'rgba(255,255,255,0.15)',
+      textStyle: { color: '#e6edf3', fontSize: 13 },
+      formatter: function(p) {
+        const d = p.data
+        let html = `<div style="font-weight:700;font-size:14px;margin-bottom:4px">${d.name}</div>`
+        if (d.position) html += `<div style="color:#8b949e;font-size:11px;margin-bottom:6px">${d.position}</div>`
+        html += `<div style="display:flex;gap:12px;margin-bottom:4px">`
+        html += `<span>权力: <b style="color:#e2b04a">${d.value[1]}</b></span>`
+        html += `<span>态度: <b style="color:${d.value[0] >= 3 ? '#ff4d4f' : d.value[0] <= -3 ? '#22c55e' : '#e2b04a'}">${d.value[0] > 0 ? '+' : ''}${d.value[0]}</b></span>`
+        html += `</div>`
+        if (d.relations) html += `<div style="color:#8b949e;font-size:11px">关系: ${d.relations}</div>`
+        return html
+      }
     },
     series
   })
