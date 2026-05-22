@@ -84,8 +84,6 @@ async function handleCreate(scene) {
   const project = store.createProject(scene)
   store.current = project
   await store.saveProject()
-  store.projects.push({ id: project.id, name: project.name, scene: project.scene, createdAt: project.createdAt })
-  localStorage.setItem('pm-projects', JSON.stringify(store.projects))
   router.push(`/editor/${project.id}`)
 }
 

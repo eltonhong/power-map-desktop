@@ -41,7 +41,6 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useProjectStore } from '@/stores/project'
-import AppHeader from '@/components/common/AppHeader.vue'
 import TablePanel from '@/components/editor/TablePanel.vue'
 import ChartPanel from '@/components/editor/ChartPanel.vue'
 import StrategyBar from '@/components/editor/StrategyBar.vue'
@@ -58,7 +57,6 @@ const showDiagnosis = ref(false)
 const chartRef = ref(null)
 const drawerRef = ref(null)
 const hoveredNodeId = ref(null)
-let saveTimer = null
 
 const cfg = computed(() => store.SCENE_CONFIG[store.current?.scene])
 
@@ -70,8 +68,6 @@ onMounted(async () => {
 
 watch(() => store.current?.nodes, () => {
   saveStatus.value = 'dirty'
-  if (saveTimer) clearTimeout(saveTimer)
-  saveTimer = setTimeout(() => handleSave(), 3000)
 }, { deep: true })
 
 async function handleSave() {
