@@ -1,21 +1,22 @@
 <template>
   <div class="six-actions">
-    <h4>{{ cfg?.label }} · 画完干嘛 6件事</h4>
+    <div class="actions-header">
+      <h4 class="actions-title">画完干嘛 · 6 件事</h4>
+      <span class="actions-scene">{{ cfg?.label }}</span>
+    </div>
     <div class="actions-grid">
       <div
         v-for="item in store.current.checklist"
         :key="item.id"
-        class="action-item"
+        class="action-card"
         :class="{ done: item.done }"
         @click="item.done = !item.done"
       >
-        <input
-          type="checkbox"
-          :checked="item.done"
-          @click.stop
-          @change="item.done = ($event.target).checked"
-        />
-        <span>{{ item.id }}. {{ item.text }}</span>
+        <div class="action-check">
+          <span v-if="item.done" class="check-icon">✓</span>
+          <span v-else class="check-num">{{ item.id }}</span>
+        </div>
+        <span class="action-text">{{ item.text }}</span>
       </div>
     </div>
   </div>
@@ -32,40 +33,43 @@ const cfg = computed(() => store.SCENE_CONFIG[store.current?.scene])
 <style scoped>
 .six-actions {
   background: var(--bg-surface);
-  border-top: 1px solid var(--border);
-  padding: 10px 20px;
+  border-top: 2px solid var(--border-strong);
+  padding: var(--space-lg) var(--space-xl);
   flex-shrink: 0;
 }
-.six-actions h4 {
-  font-family: var(--font-en);
-  font-size: 12px;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-  font-weight: 500;
+.actions-header {
+  display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-md);
 }
-.actions-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
+.actions-title {
+  font-size: var(--fs-subtitle); font-weight: 600; color: var(--text-primary);
 }
-.action-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  font-size: 12px;
-  cursor: pointer;
-  padding: 4px 0;
-  transition: color 0.2s;
-  border-radius: 4px;
+.actions-scene {
+  font-size: var(--fs-caption); color: var(--text-tertiary);
+  background: var(--overlay-hover); padding: 2px 8px; border-radius: var(--radius-sm);
 }
-.action-item:hover { color: var(--text-primary); }
-.action-item.done span {
-  text-decoration: line-through;
-  color: var(--text-secondary);
+.actions-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-sm); }
+
+.action-card {
+  display: flex; align-items: flex-start; gap: var(--space-sm);
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: var(--space-md);
+  cursor: pointer; transition: all var(--transition-fast);
 }
-.action-item input[type="checkbox"] {
-  cursor: pointer;
-  margin-top: 2px;
-  flex-shrink: 0;
+.action-card:hover { border-color: var(--border-strong); background: var(--overlay-hover); }
+.action-card.done { opacity: 0.5; }
+.action-card.done .action-text { text-decoration: line-through; color: var(--text-tertiary); }
+
+.action-check { flex-shrink: 0; margin-top: 1px; }
+.check-icon {
+  display: flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--risk-green); color: #fff; font-size: var(--fs-tiny); font-weight: 700;
 }
+.check-num {
+  display: flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 1px solid var(--border-strong); color: var(--text-tertiary);
+  font-size: var(--fs-caption); font-family: var(--font-mono);
+}
+.action-text { font-size: var(--fs-small); line-height: 1.5; color: var(--text-secondary); }
 </style>

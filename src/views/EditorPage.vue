@@ -1,13 +1,22 @@
 <template>
   <div class="editor" v-if="store.current">
-    <AppHeader :title="store.current.name" back @back="goBack">
-      <span class="save-indicator" :class="{ saved: saveStatus === 'saved' }">
-        {{ saveStatus === 'saved' ? '✓ 已保存' : saveStatus === 'saving' ? '... 保存中' : '● 未保存' }}
-      </span>
-      <button class="toolbar-btn" @click="handleSave">保存</button>
-      <button class="toolbar-btn" @click="handleExport">导出PNG</button>
-      <button class="toolbar-btn" @click="showDiagnosis = true">全局诊断</button>
-    </AppHeader>
+    <header class="editor-topbar">
+      <div class="topbar-left">
+        <button class="topbar-back" @click="goBack">←</button>
+        <div class="topbar-title">
+          <span class="title-text">{{ store.current.name }}</span>
+          <span class="title-scene">{{ cfg?.label }}</span>
+        </div>
+        <span class="save-indicator" :class="{ saved: saveStatus === 'saved' }">
+          {{ saveStatus === 'saved' ? '✓ 已保存' : saveStatus === 'saving' ? '···' : '● 未保存' }}
+        </span>
+      </div>
+      <div class="topbar-actions">
+        <button class="topbar-btn" @click="showDiagnosis = true">诊断</button>
+        <button class="topbar-btn" @click="handleExport">导出PNG</button>
+        <button class="topbar-btn primary" @click="handleSave">保存</button>
+      </div>
+    </header>
 
     <div class="editor-body">
       <TablePanel
@@ -19,19 +28,17 @@
         <ChartPanel ref="chartRef" :highlightId="hoveredNodeId" />
         <StrategyBar />
       </div>
-      <StrategyDrawer ref="drawerRef" />
     </div>
 
     <SixActionsPanel />
+    <StrategyDrawer ref="drawerRef" />
     <DiagnosisModal v-if="showDiagnosis" @close="showDiagnosis = false" />
   </div>
-  <div v-else class="loading">
-    <p>加载中...</p>
-  </div>
+  <div v-else class="loading">加载中...</div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useProjectStore } from '@/stores/project'
 import AppHeader from '@/components/common/AppHeader.vue'
@@ -53,106 +60,73 @@ const drawerRef = ref(null)
 const hoveredNodeId = ref(null)
 let saveTimer = null
 
+const cfg = computed(() => store.SCENE_CONFIG[store.current?.scene])
+
 onMounted(async () => {
   await store.loadProject(route.params.id)
-  if (!store.current) {
-    router.push('/')
-    return
-  }
+  if (!store.current) { router.push('/'); return }
   saveStatus.value = 'saved'
 })
 
-watch(
-  () => store.current?.nodes,
-  () => {
-    saveStatus.value = 'dirty'
-    // Auto-save after 3 seconds of inactivity
-    if (saveTimer) clearTimeout(saveTimer)
-    saveTimer = setTimeout(() => {
-      handleSave()
-    }, 3000)
-  },
-  { deep: true }
-)
+watch(() => store.current?.nodes, () => {
+  saveStatus.value = 'dirty'
+  if (saveTimer) clearTimeout(saveTimer)
+  saveTimer = setTimeout(() => handleSave(), 3000)
+}, { deep: true })
 
 async function handleSave() {
   saveStatus.value = 'saving'
   await store.saveProject()
   saveStatus.value = 'saved'
 }
-
-function handleExport() {
-  chartRef.value?.exportPNG()
-}
-
+function handleExport() { chartRef.value?.exportPNG() }
 function goBack() {
-  if (saveStatus.value === 'dirty') {
-    handleSave()
-  }
+  if (saveStatus.value === 'dirty') handleSave()
   router.push('/')
 }
-
-function onSelectNode(id) {
-  if (drawerRef.value) {
-    drawerRef.value.open(id)
-  }
-}
-
-function onHoverNode(id) {
-  hoveredNodeId.value = id
-}
+function onSelectNode(id) { drawerRef.value?.open(id) }
+function onHoverNode(id) { hoveredNodeId.value = id }
 </script>
 
 <style scoped>
-.editor {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+.editor { height: 100%; display: flex; flex-direction: column; background: var(--bg-base); }
+
+/* Top Bar */
+.editor-topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: var(--space-sm) var(--space-xl); background: var(--bg-surface);
+  border-bottom: 1px solid var(--border); flex-shrink: 0; -webkit-app-region: drag;
 }
-.editor-body {
-  flex: 1;
-  display: flex;
-  gap: 0;
-  overflow: hidden;
+.topbar-left { display: flex; align-items: center; gap: var(--space-md); }
+.topbar-back {
+  background: none; border: none; color: var(--text-secondary); font-size: var(--fs-heading);
+  cursor: pointer; padding: 2px 6px; border-radius: var(--radius-sm);
+  -webkit-app-region: no-drag;
 }
-.panel-left {
-  width: 340px;
-  min-width: 340px;
+.topbar-back:hover { color: var(--text-primary); background: var(--overlay-hover); }
+.topbar-title { display: flex; align-items: center; gap: var(--space-sm); }
+.title-text { font-size: var(--fs-subtitle); font-weight: 600; color: var(--text-primary); }
+.title-scene {
+  font-size: var(--fs-caption); color: var(--gold); background: rgba(226,176,74,0.1);
+  padding: 1px 8px; border-radius: var(--radius-sm);
 }
-.panel-center {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  position: relative;
+.save-indicator { font-size: var(--fs-caption); color: var(--text-tertiary); font-family: var(--font-mono); }
+.save-indicator.saved { color: var(--risk-green); }
+
+.topbar-actions { display: flex; gap: var(--space-sm); -webkit-app-region: no-drag; }
+.topbar-btn {
+  padding: 6px 16px; border: 1px solid var(--border); border-radius: var(--radius-md);
+  background: transparent; color: var(--text-primary); font-size: var(--fs-small);
+  cursor: pointer; transition: all var(--transition-fast); height: var(--ctrl-height-sm);
 }
-.save-indicator {
-  font-size: 12px;
-  color: var(--text-secondary);
-  font-family: var(--font-mono);
-}
-.save-indicator.saved {
-  color: var(--risk-green);
-}
-.toolbar-btn {
-  padding: 6px 14px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--text-primary);
-  cursor: pointer;
-  font-size: 12px;
-  transition: all 0.2s;
-}
-.toolbar-btn:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.15);
-}
-.loading {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-secondary);
-}
+.topbar-btn:hover { background: var(--overlay-hover); border-color: var(--border-strong); }
+.topbar-btn.primary { background: var(--gold); color: #000; border-color: var(--gold); font-weight: 600; }
+.topbar-btn.primary:hover { opacity: 0.9; }
+
+/* Body */
+.editor-body { flex: 1; display: flex; overflow: hidden; min-height: 0; }
+.panel-left { width: 360px; min-width: 360px; }
+.panel-center { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+
+.loading { height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-tertiary); font-size: var(--fs-body); }
 </style>

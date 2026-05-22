@@ -1,41 +1,108 @@
 :root {
+  /* Background */
   --bg-base: #090d13;
   --bg-surface: #131820;
+  --bg-elevated: #1a1f2b;
   --bg-glass: rgba(19, 24, 32, 0.88);
   --blur: 16px;
+
+  /* Brand & Role colors */
   --champion: #ff4d4f;
   --mover: #3b82f6;
   --blocker: #1e1e1e;
   --bystander: #6b7280;
   --gold: #e2b04a;
-  --text-primary: #e6edf3;
-  --text-secondary: #8b949e;
-  --border: rgba(255, 255, 255, 0.06);
+
+  /* Risk & Status */
   --risk-red: #ff4d4f;
+  --risk-orange: #f59e0b;
   --risk-yellow: #e2b04a;
   --risk-green: #22c55e;
+
+  /* Text hierarchy */
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-tertiary: #5d6670;
+  --text-inverse: #1a1a2e;
+
+  /* Border */
+  --border: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.10);
+  --border-focus: rgba(226, 176, 74, 0.4);
+
+  /* Typography scale */
+  --fs-display: 22px;    /* Page title */
+  --fs-heading: 16px;    /* Section header */
+  --fs-subtitle: 14px;   /* Card title, block subtitle */
+  --fs-body: 13px;       /* Body text, field labels */
+  --fs-small: 12px;      /* Secondary info */
+  --fs-caption: 11px;    /* Captions, badges */
+  --fs-tiny: 10px;       /* Meta, axis labels */
+
   --font-cn: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  --font-en: 'Space Grotesk', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-  --transition-fast: 150ms ease;
-  --transition-normal: 300ms ease;
-  --transition-slow: 500ms ease;
+  --font-en: 'Space Grotesk', 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+
+  /* Spacing scale (4px base) */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
+  --space-2xl: 24px;
+  --space-3xl: 32px;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+
+  /* Controls */
+  --ctrl-height-sm: 28px;
+  --ctrl-height-md: 34px;
+  --ctrl-height-lg: 40px;
+  --input-bg: rgba(0, 0, 0, 0.2);
+  --input-border: var(--border);
+  --slider-track: 4px;
+  --slider-thumb: 16px;
+
+  /* Overlay / Hover */
   --overlay-hover: rgba(255, 255, 255, 0.04);
   --overlay-active: rgba(255, 255, 255, 0.06);
   --overlay-inverse: rgba(0, 0, 0, 0.04);
-  --input-bg: rgba(0, 0, 0, 0.2);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.4);
+  --shadow-gold: 0 4px 24px rgba(226,176,74,0.12);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 300ms ease;
+  --transition-slow: 500ms ease;
 }
 
 :root[data-theme="light"] {
   --bg-base: #f0f2f5;
   --bg-surface: #ffffff;
+  --bg-elevated: #f8f9fb;
   --bg-glass: rgba(255, 255, 255, 0.92);
   --text-primary: #1a1a2e;
   --text-secondary: #5a6070;
-  --border: rgba(0, 0, 0, 0.10);
+  --text-tertiary: #9ca3af;
+  --text-inverse: #e6edf3;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.12);
+  --border-focus: rgba(226, 176, 74, 0.5);
   --blocker: #1e1e1e;
+  --input-bg: #f2f3f5;
   --overlay-hover: rgba(0, 0, 0, 0.04);
   --overlay-active: rgba(0, 0, 0, 0.06);
   --overlay-inverse: rgba(255, 255, 255, 0.04);
-  --input-bg: #f5f5f5;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+  --shadow-gold: 0 4px 24px rgba(226,176,74,0.15);
 }
