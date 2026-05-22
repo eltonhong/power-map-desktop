@@ -1,0 +1,17 @@
+appId: com.powermap.desktop
+productName: 权力地图
+directories:
+  output: release
+files:
+  - dist/**/*
+  - electron/**/*
+  - package.json
+win:
+  target: nsis
+  icon: build/icon.ico
+mac:
+  target: dmg
+  icon: build/icon.icns
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
